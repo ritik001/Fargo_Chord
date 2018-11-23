@@ -3,6 +3,12 @@
 #include "node.h"
 using namespace std;
 
+Node node;
+
+Node::Node(){
+	
+}
+
 Node::Node(ll identifier, pair<ll, string> successor,
 		pair<ll, string> predecessor) {
 

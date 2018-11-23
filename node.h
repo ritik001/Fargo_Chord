@@ -1,3 +1,6 @@
+#ifndef NODE_H
+#define NODE_H
+
 #include "chord.h"
 #include "finger.h"
 
@@ -13,6 +16,7 @@ public:
 
 
 	Node(ll identifier, pair<ll,string> successor, pair<ll,string> predecessor);
+	Node();
 
 	vector<Finger>& getFingerTable();
 
@@ -33,3 +37,6 @@ public:
 	void print_fingers();
 
 };
+
+extern Node node;
+#endif
