@@ -2,3 +2,4 @@
 .project
 chord
 *.o
+.cproject
