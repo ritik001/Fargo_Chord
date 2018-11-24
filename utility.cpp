@@ -40,7 +40,6 @@ lli Utility::getHash(string key){
     }
 
     lli hash = stoll(keyHash) % mod;
-
     return hash;
 }
 

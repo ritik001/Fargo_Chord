@@ -17,8 +17,8 @@
 #include <mutex>
 #include <sstream>
 
-#define M 48
-#define R 10
+#define M 3
+#define R 2
 
 using namespace std;
 

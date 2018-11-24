@@ -62,6 +62,7 @@ void create(NodeDetails &nodeDetails){
     string key = ip+":"+(to_string(port));   
     
     lli hash = util.getHash(key);
+    cout<<"identifier is: "<<hash<<"\n";
 
     /* setting id, successor , successor list , predecessor ,finger table and status of node */
     nodeDetails.setId(hash);
@@ -135,6 +136,7 @@ void join(NodeDetails &nodeDetails,string ip,string port){
 
     string key = ipAndPort;
     lli hash = util.getHash(key);
+    cout<<"identifier is: "<<nodeId<<"\n";
     pair<string,int> ipAndPortPair = util.getIpAndPort(key);
 
     /* setting id, successor , successor list , predecessor, finger table and status */
