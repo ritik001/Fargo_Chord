@@ -4,16 +4,16 @@
 mutex mt;
 
 /* splits the command into seperate arguments */
-vector<string> Utility::splitCommand(string command){
-    vector<string> arguments;
-    int pos = 0;
-    do{
-        pos = command.find(' ');
-        string arg = command.substr(0,pos); 
-        arguments.push_back(arg);
-        command = command.substr(pos+1);
-    }while(pos != -1);
-    return arguments;
+vector<string> Utility::split_string(string command){  // improve for multiple spaces
+      char delimiter=' ';
+      vector<string> processed_command;
+      stringstream ss(command);
+      string token;
+     
+      while(getline(ss, token, delimiter)) {
+        processed_command.push_back(token);
+      }
+      return processed_command;
 }
 
 /* get SHA1 hash for a given key */
@@ -34,7 +34,7 @@ lli Utility::getHash(string key){
 
 
     SHA1(unsigned_key,sizeof(unsigned_key),obuf);
-    for (i = 0; i < M/8; i++) {
+    for (i = 0; i < SHA224_DIGEST_LENGTH/8; i++) {
         sprintf(finalHash,"%d",obuf[i]);
         keyHash += finalHash;
     }

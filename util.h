@@ -13,7 +13,7 @@ class Utility{
 
 	public:
 
-		vector<string> splitCommand(string command);
+		vector<string> split_string(string command);
 		string combineIpAndPort(string ip,string port);
 		vector< pair<lli,string> > seperateKeysAndValues(string keysAndValues);
 		vector< pair<string,int> > seperateSuccessorList(string succList);
