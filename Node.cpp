@@ -6,7 +6,7 @@ using namespace std;
 Node node;
 
 Node::Node(){
-	
+
 }
 
 Node::Node(ll identifier, pair<ll, string> successor,
@@ -46,19 +46,19 @@ void Node::setIdentifier(ll identifier) {
 	this->identifier = identifier;
 }
 
-pair<ll, string>& Node::getPredecessor() {
+pair<ll, pair<string,int>> Node::getPredecessor() {
 	return predecessor;
 }
 
-void Node::setPredecessor(pair<ll, string>& predecessor) {
+void Node::setPredecessor(pair<ll, pair<string,int>> predecessor) {
 	this->predecessor = predecessor;
 }
 
-pair<ll, string>& Node::getSuccessor() {
+pair<ll, pair<string,int>> Node::getSuccessor() {
 	return successor;
 }
 
-void Node::setSuccessor(pair<ll, string>& successor) {
+void Node::setSuccessor(pair<ll, pair<string,int>> successor) {
 	this->successor = successor;
 }
 
@@ -72,3 +72,18 @@ void Node::print_fingers() {
 
 }
 
+string Node::getIp() {
+	return ip;
+}
+
+void Node::setIp(string ip) {
+	this->ip=ip;
+}
+
+int Node::getPort() {
+	return port;
+}
+
+void Node::setPort(int port) {
+	this->port=port;
+}
