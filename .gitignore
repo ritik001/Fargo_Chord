@@ -3,3 +3,4 @@
 chord
 *.o
 .cproject
+/.metadata/
