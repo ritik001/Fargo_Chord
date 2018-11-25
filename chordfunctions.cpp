@@ -96,12 +96,23 @@ void join(NodeDetails &nodeDetails,string ip,string port){
 
     util.setServerDetails(server,ip,stoi(port));
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
         exit(-1);
     }
+
+	int ret = connect(sock, (struct sockaddr *)&server, sizeof(server));
+	if (ret < 0)
+	{
+		printf("Error in connectionNodepredecessor.\n");
+		exit(1);
+	}
+    else
+        printf("Connected\n");
+
+
 
     string currIp = nodeDetails.sp.getIpAddress();
     string currPort = to_string(nodeDetails.sp.getPortNumber()); 
@@ -114,7 +125,7 @@ void join(NodeDetails &nodeDetails,string ip,string port){
 
 
     /* node sends it's id to main node to find it's successor */
-    if (sendto(sock, charNodeId, strlen(charNodeId), 0, (struct sockaddr*) &server, l) == -1){
+    if (send(sock, charNodeId, strlen(charNodeId), 0) == -1){
         cout<<"yaha 1\n";
         perror("error");
         exit(-1);
@@ -123,7 +134,7 @@ void join(NodeDetails &nodeDetails,string ip,string port){
     /* node receives id and port of it's successor */
     char ipAndPort[40];
     int len;
-    if ((len = recvfrom(sock, ipAndPort, 1024, 0, (struct sockaddr *) &server, &l)) == -1){
+    if ((len = recv(sock, ipAndPort, 1024, 0)) == -1){
         cout<<"yaha 2\n";
         perror("error");
         exit(-1);
@@ -147,8 +158,11 @@ void join(NodeDetails &nodeDetails,string ip,string port){
     nodeDetails.setFingerTable(ipAndPortPair.first,ipAndPortPair.second,hash);
     nodeDetails.setStatus();
 
+    cout<<"123"<<"\n";
+
     /* get all keys from it's successor which belongs to it now */
     util.getKeysFromSuccessor(nodeDetails , ipAndPortPair.first , ipAndPortPair.second);
+   cout<<"456"<<"\n";
 
     /* launch threads,one thread will listen to request from other nodes,one will do stabilization */
     thread fourth(listenTo,ref(nodeDetails));
@@ -216,17 +230,37 @@ void leave(NodeDetails &nodeDetails){
 
     util.setServerDetails(serverToConnectTo,succ.first.first,succ.first.second);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
         exit(-1);
     }
 
+/* 	struct sockaddr_in serverAddr;
+
+	memset(&serverAddr, '\0', sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(nodeDetails.sp.getPortNumber());
+	serverAddr.sin_addr.s_addr = inet_addr(nodeDetails.sp.getIpAddress().c_str()); */
+
+    cout << "hello \n";
+    cout << "Port " << serverToConnectTo.sin_port << "\n";
+    cout << "Address " << serverToConnectTo.sin_addr.s_addr << "\n";
+
+	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+	if (ret < 0)
+	{
+		printf("Error in connectionLeave.\n");
+		exit(1);
+	}
+    else
+        printf("Connected\n");
+
     char keysAndValuesChar[2000];
     strcpy(keysAndValuesChar,keysAndValues.c_str());
 
-    sendto(sock,keysAndValuesChar,strlen(keysAndValuesChar),0,(struct sockaddr *)&serverToConnectTo,l);
+    send(sock,keysAndValuesChar,strlen(keysAndValuesChar),0);
 
     close(sock);
 }
@@ -234,7 +268,7 @@ void leave(NodeDetails &nodeDetails){
 /* perform different tasks according to received msg */
 void doTask(NodeDetails &nodeDetails,int newSock,struct sockaddr_in client,string nodeIdString){
 
-
+    cout << "In do task " << nodeIdString << "\n";
     /* predecessor of this node has left the ring and has sent all it's keys to this node(it's successor) */
     if(nodeIdString.find("storeKeys") != -1){
         util.storeAllKeys(nodeDetails,nodeIdString);
@@ -257,7 +291,9 @@ void doTask(NodeDetails &nodeDetails,int newSock,struct sockaddr_in client,strin
 
     /* contacting node has just joined the ring and is asking for keys that belongs to it now */
     else if(nodeIdString.find("getKeys") != -1){
+        cout << "Req received\n";
         util.sendNeccessaryKeys(nodeDetails,newSock,client,nodeIdString);
+
     }
 
     /* contacting node has run get command so send value of key it requires */
@@ -293,17 +329,48 @@ void listenTo(NodeDetails &nodeDetails){
     socklen_t l = sizeof(client);
 
     /* wait for any client to connect and create a new thread as soon as one connects */
+
+    int newSocket;
+	struct sockaddr_in new_addr;
+	socklen_t addr_size = sizeof(new_addr);
+
+	
+    int sock = nodeDetails.sp.getSocketFd();
+/*     cout << "Request\n"; */
     while(1){
+
+        if (listen(sock, 10) == 0)
+		    printf("3. Listening\n");
+	    else
+		    printf("Error in listening\n");
+
+		printf("Inside\n");
+		newSocket = accept(sock, (struct sockaddr *)&new_addr, &addr_size);
+		
+        cout<<"after accept\n";
+        if (newSocket < 0)
+		{
+			printf("Connection not accepted \n");
+			exit(1);
+		}
+		else
+			printf("connection accepted \n");
+
+	//nodeDetails.sp.closeSocket();
+
         char charNodeId[40];
-        int sock = nodeDetails.sp.getSocketFd();
-        int len = recvfrom(sock, charNodeId, 1024, 0, (struct sockaddr *) &client, &l);
+        
+        int len = recv(newSocket, charNodeId, 1024, 0);
         charNodeId[len] = '\0';
         string nodeIdString = charNodeId;
+        cout << "Val " << nodeIdString << "\n";
 
         /* launch a thread that will perform diff tasks acc to received msg */
-        thread f(doTask,ref(nodeDetails),sock,client,nodeIdString);
+        thread f(doTask,ref(nodeDetails),newSocket,client,nodeIdString);
         f.detach();
+        close(newSocket);
     }
+        nodeDetails.sp.closeSocket();
 }
 
 

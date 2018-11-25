@@ -97,22 +97,32 @@ string Utility::getKeyFromNode(pair< pair<string,int> , lli > node,string keyHas
 
     setServerDetails(serverToConnectTo,ip,port);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
         exit(-1);
     }
 
+    int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+    if (ret < 0)
+    {
+        printf("Error in connectionNodeAlive.\n");
+        exit(1);
+    }
+    else
+        printf("Connected\n");
+
+
     keyHash += "k";
 
     char keyHashChar[40];
     strcpy(keyHashChar,keyHash.c_str());
 
-    sendto(sock,keyHashChar,strlen(keyHashChar),0,(struct sockaddr *)&serverToConnectTo,l);
+    send(sock,keyHashChar,strlen(keyHashChar),0);
 
     char valChar[100];
-    int len = recvfrom(sock,valChar,1024,0,(struct sockaddr *)&serverToConnectTo,&l);
+    int len = recv(sock,valChar,1024,0);
 
     valChar[len] = '\0';
 
@@ -140,19 +150,29 @@ void Utility::sendKeyToNode(pair< pair<string,int> , lli > node,lli keyHash,stri
 
     setServerDetails(serverToConnectTo,ip,port);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
         exit(-1);
     }
 
+    int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+
+    if (ret < 0)
+    {
+        printf("Error in connectionNodeAlive.\n");
+        exit(1);
+    }
+    else
+        printf("Connected\n");
+
     string keyAndVal = combineIpAndPort(to_string(keyHash),value);
 
     char keyAndValChar[100];
     strcpy(keyAndValChar,keyAndVal.c_str());
 
-    sendto(sock,keyAndValChar,strlen(keyAndValChar),0,(struct sockaddr *)&serverToConnectTo,l);
+    send(sock,keyAndValChar,strlen(keyAndValChar),0);
 
     close(sock);
 }
@@ -165,11 +185,21 @@ void Utility::getKeysFromSuccessor(NodeDetails &nodeDetails,string ip,int port){
 
     setServerDetails(serverToConnectTo,ip,port);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
     if(sock < 0){
         perror("error");
         exit(-1);
     }
+
+    int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+
+    if (ret < 0)
+    {
+        printf("Error in connectionNodeAlive.\n");
+        exit(1);
+    }
+    else
+        printf("ConnectedinKeys\n");
 
     /* node sends msg "getKeys:id" to it's successor to get all keys which belongs to this node now */
     string id = to_string(nodeDetails.getId());
@@ -180,20 +210,26 @@ void Utility::getKeysFromSuccessor(NodeDetails &nodeDetails,string ip,int port){
     char msgChar[40];
     strcpy(msgChar,msg.c_str());
 
-    sendto(sock,msgChar,strlen(msgChar),0,(struct sockaddr *) &serverToConnectTo,l);
+       cout<<"abc"<<"\n";
 
+    cout << msgChar << "\n";
+    send(sock,msgChar,strlen(msgChar),0);
+       cout<<"def"<<"\n";
     char keysAndValuesChar[2000];
-    int len = recvfrom(sock,keysAndValuesChar,2000,0,(struct sockaddr *) &serverToConnectTo,&l);
+    int len = recv(sock,keysAndValuesChar,2000,0);
 
+       cout<<"ghy"<<"\n";
     keysAndValuesChar[len] = '\0';
 
     close(sock);
 
     string keysAndValues = keysAndValuesChar;
+       cout<<keysAndValues<<"\n";
 
     vector< pair<lli,string> > keysAndValuesVector = seperateKeysAndValues(keysAndValues);
 
     for(int i=0;i<keysAndValuesVector.size();i++){
+
         nodeDetails.storeKey(keysAndValuesVector[i].first , keysAndValuesVector[i].second);
     }
 
@@ -289,7 +325,7 @@ void Utility::sendNeccessaryKeys(NodeDetails &nodeDetails,int newSock,struct soc
     int pos = nodeIdString.find(':');
 
     lli nodeId = stoll(nodeIdString.substr(pos+1));
-
+    cout << "before pred \n";
     vector< pair<lli , string> > keysAndValuesVector = nodeDetails.getKeysForPredecessor(nodeId);
 
     string keysAndValues = "";
@@ -302,8 +338,9 @@ void Utility::sendNeccessaryKeys(NodeDetails &nodeDetails,int newSock,struct soc
 
     char keysAndValuesChar[2000];
     strcpy(keysAndValuesChar,keysAndValues.c_str());
-
-    sendto(newSock,keysAndValuesChar,strlen(keysAndValuesChar),0,(struct sockaddr *)&client,l);
+    cout << "before send \n";
+    send(newSock,keysAndValuesChar,strlen(keysAndValuesChar),0);
+    exit(1);
 }
 
 /* */
@@ -317,7 +354,7 @@ void Utility::sendValToNode(NodeDetails nodeDetails,int newSock,struct sockaddr_
     char valChar[100];
     strcpy(valChar,val.c_str());
 
-    sendto(newSock,valChar,strlen(valChar),0,(struct sockaddr *)&client,l);
+    send(newSock,valChar,strlen(valChar),0);
 }
 
 /* send successor id of current node to the contacting node */
@@ -331,7 +368,7 @@ void Utility::sendSuccessorId(NodeDetails nodeDetails,int newSock,struct sockadd
 
     strcpy(succIdChar,succId.c_str());
 
-    sendto(newSock,succIdChar,strlen(succIdChar),0,(struct sockaddr *)&client,l);
+    send(newSock,succIdChar,strlen(succIdChar),0);
 
 }
 
@@ -353,7 +390,7 @@ void Utility::sendSuccessor(NodeDetails nodeDetails,string nodeIdString,int newS
     strcpy(ipAndPort,combineIpAndPort(succIp,succPort).c_str());
 
     /* send ip and port info to the respective node */
-    sendto(newSock, ipAndPort, strlen(ipAndPort), 0, (struct sockaddr*) &client, l);
+    send(newSock, ipAndPort, strlen(ipAndPort), 0);
 
 }
 
@@ -369,7 +406,7 @@ void Utility::sendPredecessor(NodeDetails nodeDetails,int newSock,struct sockadd
 
     /* if predecessor is nil */
     if(ip == ""){
-        sendto(newSock, "", 0, 0, (struct sockaddr*) &client, l);       
+        send(newSock, "", 0, 0);       
     }
 
     else{
@@ -378,7 +415,7 @@ void Utility::sendPredecessor(NodeDetails nodeDetails,int newSock,struct sockadd
         char ipAndPortChar[40];
         strcpy(ipAndPortChar,ipAndPort.c_str());
 
-        sendto(newSock, ipAndPortChar, strlen(ipAndPortChar), 0, (struct sockaddr*) &client, l);
+        send(newSock, ipAndPortChar, strlen(ipAndPortChar), 0);
 
     }
 }
@@ -395,7 +432,7 @@ lli Utility::getSuccessorId(string ip,int port){
     struct timeval timer;
     setTimer(timer);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
@@ -410,9 +447,19 @@ lli Utility::getSuccessorId(string ip,int port){
         exit(-1);
     }
 
+    int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+
+    if (ret < 0)
+    {
+        printf("Error in connectionNodeAlive.\n");
+        exit(1);
+    }
+    else
+        printf("Connected\n");
+
     char msg[] = "finger";
 
-    if (sendto(sock, msg, strlen(msg) , 0, (struct sockaddr*) &serverToConnectTo, l) == -1){
+    if (send(sock, msg, strlen(msg) , 0) == -1){
         cout<<"yaha 11 "<<sock<<endl;
         perror("error");
         exit(-1);
@@ -420,7 +467,7 @@ lli Utility::getSuccessorId(string ip,int port){
 
     char succIdChar[40];
 
-    int len = recvfrom(sock,succIdChar,1024,0,(struct sockaddr*) &serverToConnectTo, &l);
+    int len = recv(sock,succIdChar,1024,0);
 
     close(sock);
 
@@ -451,7 +498,7 @@ pair< pair<string,int> , lli > Utility::getPredecessorNode(string ip,int port,st
     struct timeval timer;
     setTimer(timer);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
@@ -459,6 +506,16 @@ pair< pair<string,int> , lli > Utility::getPredecessorNode(string ip,int port,st
     }
 
     setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+
+	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+	if (ret < 0)
+	{
+		printf("Error in connectionNodepredecessor.\n");
+		exit(1);
+	}
+    else
+        printf("Connected\n");
+
 
     string msg = "";
 
@@ -477,14 +534,14 @@ pair< pair<string,int> , lli > Utility::getPredecessorNode(string ip,int port,st
     char ipAndPortChar[40];
     strcpy(ipAndPortChar,msg.c_str());
 
-    if (sendto(sock, ipAndPortChar, strlen(ipAndPortChar), 0, (struct sockaddr*) &serverToConnectTo, l) < 0){
+    if (send(sock, ipAndPortChar, strlen(ipAndPortChar), 0) < 0){
         cout<<"yaha 12 "<<sock<<endl;
         perror("error");
         exit(-1);
     }
 
 
-    int len = recvfrom(sock, ipAndPortChar, 1024, 0, (struct sockaddr *) &serverToConnectTo, &l);
+    int len = recv(sock, ipAndPortChar, 1024, 0);
     close(sock);
 
     if(len < 0){
@@ -534,20 +591,31 @@ vector< pair<string,int> > Utility::getSuccessorListFromNode(string ip,int port)
     setTimer(timer);
     
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
     if(sock < 0){
         perror("error");
         exit(-1);
     }
 
-    setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+/*     setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval)); */
+
+	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+
+	if (ret < 0)
+	{
+		printf("Error in connectionSuccessor.\n");
+		exit(1);
+	}
+    else
+        printf("ConnectedinSuc\n");
+
 
     char msg[] = "sendSuccList";
 
-    sendto(sock,msg,strlen(msg),0,(struct sockaddr *)&serverToConnectTo,l);
+    send(sock,msg,strlen(msg),0);
 
     char succListChar[1000];
-    int len = recvfrom(sock,succListChar,1000,0,(struct sockaddr *)&serverToConnectTo,&l);
+    int len = recv(sock,succListChar,1000,0);
 
     close(sock);
 
@@ -578,7 +646,7 @@ void Utility::sendSuccessorList(NodeDetails &nodeDetails,int sock,struct sockadd
     char successorListChar[1000];
     strcpy(successorListChar,successorList.c_str());
 
-    sendto(sock,successorListChar,strlen(successorListChar),0,(struct sockaddr *)&client,l);
+    send(sock,successorListChar,strlen(successorListChar),0);
 
 }
 
@@ -598,7 +666,7 @@ string Utility::splitSuccessorList(vector< pair< pair<string,int> , lli > > list
 void Utility::sendAcknowledgement(int newSock,struct sockaddr_in client){
     socklen_t l = sizeof(client);
 
-    sendto(newSock,"1",1,0,(struct sockaddr*)&client,l);
+    send(newSock,"1",1,0);
 }
 
 /* check if node having ip and port is still alive or not */
@@ -613,7 +681,7 @@ bool Utility::isNodeAlive(string ip,int port){
     setTimer(timer);
 
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET,SOCK_STREAM,0);
 
     if(sock < 0){
         perror("error");
@@ -621,13 +689,25 @@ bool Utility::isNodeAlive(string ip,int port){
     }
 
     /* set timer on this socket */
-    setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+/*     setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval)); */
+
+
+	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+
+	if (ret < 0)
+	{
+		printf("Error in connectionNodeAlive.\n");
+		exit(1);
+	}
+    else
+        printf("Connected\n");
+
 
     char msg[] = "alive";
-    sendto(sock,msg,strlen(msg),0,(struct sockaddr *)&serverToConnectTo,l);
+    send(sock,msg,strlen(msg),0);
 
     char response[5];
-    int len = recvfrom(sock,response,2,0,(struct sockaddr *)&serverToConnectTo,&l);
+    int len = recv(sock,response,2,0);
 
     close(sock);
 

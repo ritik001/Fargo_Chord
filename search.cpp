@@ -59,7 +59,7 @@ pair<ll,pair<string,int>> find_successor(ll identifier){ //return pair of addres
 		    server.sin_family = AF_INET;
 		    server.sin_addr.s_addr = inet_addr(ip.c_str());
 		    server.sin_port = htons(port);   
-		    int sock_id = socket(AF_INET,SOCK_DGRAM,0);
+		    int sock_id = socket(AF_INET,SOCK_STREAM,0);
 		    if(sock_id < 0){
 		       perror("error");
 		       exit(-1);
@@ -74,12 +74,12 @@ pair<ll,pair<string,int>> find_successor(ll identifier){ //return pair of addres
 			/* send the  identifier to the other node */
 			char IdentifierChar[40];
 			strcpy(IdentifierChar,to_string(identifier).c_str());
-			sendto(sock_id, IdentifierChar, strlen(IdentifierChar), 0, (struct sockaddr*) &server, addr_len);
+			send(sock_id, IdentifierChar, strlen(IdentifierChar), 0);
 
 			/* receive ip and port of node's successor as ip:port*/
 			char ipAndPort[40];
 
-			int l = recvfrom(sock_id, ipAndPort, 1024, 0, (struct sockaddr *) &server, &addr_len);
+			int l = recv(sock_id, ipAndPort, 1024, 0);
 
 			close(sock_id);
 

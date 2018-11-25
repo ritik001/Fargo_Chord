@@ -93,7 +93,7 @@ vector< pair<lli , string> > NodeDetails::getAllKeysForSuccessor(){
 
 vector< pair<lli , string> > NodeDetails::getKeysForPredecessor(lli nodeId){
 	map<lli,string>::iterator it;
-
+    cout << "in dict \n";
 	vector< pair<lli , string> > res;
 	for(it = dictionary.begin(); it != dictionary.end() ; it++){
 		lli keyId = it->first;
@@ -176,7 +176,7 @@ pair< pair<string,int> , lli > NodeDetails::findSuccessor(lli nodeId){
     		util.setTimer(timer);
 
 
-			int sockT = socket(AF_INET,SOCK_DGRAM,0);
+			int sockT = socket(AF_INET,SOCK_STREAM,0);
 
 			setsockopt(sockT,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
 
@@ -186,15 +186,25 @@ pair< pair<string,int> , lli > NodeDetails::findSuccessor(lli nodeId){
 				exit(-1);
 			}
 
+			int ret = connect(sockT, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+
+			if (ret < 0)
+			{
+				printf("Error in connectionNodeAlive.\n");
+				exit(1);
+			}
+			else
+				printf("Connected\n");
+
 			/* send the node's id to the other node */
 			char nodeIdChar[40];
 			strcpy(nodeIdChar,to_string(nodeId).c_str());
-			sendto(sockT, nodeIdChar, strlen(nodeIdChar), 0, (struct sockaddr*) &serverToConnectTo, len);
+			send(sockT, nodeIdChar, strlen(nodeIdChar), 0);
 
 			/* receive ip and port of node's successor as ip:port*/
 			char ipAndPort[40];
 
-			int l = recvfrom(sockT, ipAndPort, 1024, 0, (struct sockaddr *) &serverToConnectTo, &len);
+			int l = recv(sockT, ipAndPort, 1024, 0);
 
 			close(sockT);
 

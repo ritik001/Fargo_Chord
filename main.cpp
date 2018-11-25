@@ -63,6 +63,7 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 				}
 				else{
 					thread first(create,ref(nodeDetails));
+					cout<<"detaching on accepting\n";
 					first.detach();
 				}
 			}
