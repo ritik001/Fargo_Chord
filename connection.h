@@ -20,6 +20,8 @@ class SocketAndPort{
 		string getIpAddress();
 		int getPortNumber();
 		int getSocketFd();
+		int connect_socket(string,string);
+
 };
 
 #endif

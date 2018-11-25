@@ -155,46 +155,28 @@ pair< pair<string,int> , lli > NodeDetails::findSuccessor(lli nodeId){
 		}
 		else{
 
-			/* connect to node which will now find the successor */
-			struct sockaddr_in serverToConnectTo;
-			socklen_t len = sizeof(serverToConnectTo);
-
-			string ip;
-			int port;
 
 			/* if this node couldn't find closest preciding node for given node id then now ask it's successor to do so */
 			if(node.second == -1){
 				node = successor;
 			}
 
-			Utility util;
-
-			util.setServerDetails(serverToConnectTo,node.first.first,node.first.second);
-
 			/* set timer on this socket */
+			Utility util;
     		struct timeval timer;
     		util.setTimer(timer);
 
-
-			int sockT = socket(AF_INET,SOCK_DGRAM,0);
-
+    		int sockT = sp.connect_socket(node.first.first,to_string(node.first.second));
 			setsockopt(sockT,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
-
-			if(sockT < 0){
-				cout<<"socket cre error";
-				perror("error");
-				exit(-1);
-			}
-
 			/* send the node's id to the other node */
 			char nodeIdChar[40];
 			strcpy(nodeIdChar,to_string(nodeId).c_str());
-			sendto(sockT, nodeIdChar, strlen(nodeIdChar), 0, (struct sockaddr*) &serverToConnectTo, len);
+			send(sockT, nodeIdChar, strlen(nodeIdChar), 0);
 
 			/* receive ip and port of node's successor as ip:port*/
 			char ipAndPort[40];
 
-			int l = recvfrom(sockT, ipAndPort, 1024, 0, (struct sockaddr *) &serverToConnectTo, &len);
+			int l = recv(sockT, ipAndPort, 1024, 0);
 
 			close(sockT);
 

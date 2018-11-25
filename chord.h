@@ -17,9 +17,12 @@
 #include <mutex>
 #include <sstream>
 
-#define M 3
-#define R 2
+#define M 10
+#define R 3
 
 using namespace std;
+
+extern string my_ip;
+extern int my_port;
 
 #endif

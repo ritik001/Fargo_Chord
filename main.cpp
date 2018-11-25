@@ -12,11 +12,24 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 void processTwoLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments);
 void processThreeLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments);
 
-int main(){
+string my_ip;
+int my_port;
+int main(int argc, char*argv[]){
 
 	NodeDetails nodeDetails;
+	if(argc==1){
+		cout<<"Enter IP:PORT\n"<<endl;
+		exit(0);
+	}
+		
+	string address = argv[1];
+
+	Utility util;
+	pair<string,int> ipAndPort = util.getIpAndPort(address);
+
+	my_ip = ipAndPort.first;
+	my_port = ipAndPort.second;
 	
-	/* */
 	initialize(nodeDetails);  //init.cpp start listening thread
 	
 	string command;
@@ -40,6 +53,7 @@ int main(){
 
 			/* */
 			processTwoLengthCommands(nodeDetails,arg,arguments);
+			cout <<" executed command\n";
 		}
 
 		else if(arguments.size() == 3){
@@ -64,6 +78,7 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 				else{
 					thread first(create,ref(nodeDetails));
 					first.detach();
+/* 					create(nodeDetails); */
 				}
 			}
 
@@ -107,7 +122,25 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 	}
 
 	void processTwoLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments){
-		if(arg == "port"){
+		if(arg == "join"){
+				if(nodeDetails.getStatus() == true){
+					cout<<"This node is already on the ring.\n";
+				}
+				else{
+					Utility util;
+					string address=arguments[1];
+					pair<string,int> ipAndPort = util.getIpAndPort(address);
+
+					string ip = ipAndPort.first;
+					int port = ipAndPort.second;
+					//cout<<"joining "<<ip<<":"<<port<<"\n";
+					join(ref(nodeDetails),ip,to_string(port));
+/* 					thread one(join,ref(nodeDetails),arguments[1],arguments[2]);
+					one.detach(); */
+				}
+
+		}
+		else if(arg == "port"){
 				if(nodeDetails.getStatus() == true){
 					cout<<"You can't change port number.\n";
 				}
@@ -125,6 +158,15 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 				else
 					get(arguments[1],nodeDetails);
 			}
+			else if(arg == "put"){
+				if(nodeDetails.getStatus() == false){
+					cout<<"This node is not in the ring.\n";
+				}
+				else{
+					string address=my_ip+":"+to_string(my_port);
+					put(arguments[1],address,nodeDetails);
+				}
+			}
 
 			else{
 				cout<<"Invalid Command\n";
@@ -132,21 +174,10 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 	}
 
 	void processThreeLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments){
-		if(arg == "join"){
-				if(nodeDetails.getStatus() == true){
-					cout<<"This node is already on the ring.\n";
-				}
-				else
-					join(nodeDetails,arguments[1],arguments[2]);
-			}
 
 			/* puts the entered key and it's value to the necessary node*/
-			else if(arg == "put"){
-				if(nodeDetails.getStatus() == false){
-					cout<<"This node is not in the ring.\n";
-				}
-				else
-					put(arguments[1],arguments[2],nodeDetails);
+			if(arg == ""){
+
 			}
 
 			else{

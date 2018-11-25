@@ -2,24 +2,48 @@
 
 #include "chord.h"
 #include "connection.h"
+#include "util.h"
 
 
+int SocketAndPort::connect_socket(string ip,string port)
+{
+	Utility util;
+	struct sockaddr_in serverToConnectTo;
+	socklen_t l = sizeof(serverToConnectTo);
+	util.setServerDetails(serverToConnectTo,ip,stoi(port));
+	int sock = socket(AF_INET,SOCK_STREAM,0);
+	if(sock < 0){
+		perror("error");
+	}
+	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+	if (ret < 0)
+	{
+	//	printf("Error In Connection Connection.cpp.\n");
+		return -1;
+	}
+	else
+	{}
+	return sock;
+}
 
 /* generate a port number to run on */
 void SocketAndPort::assignAndBindToIpAndPort(){
 
 	/* generating a port number between 1024 and 65535 */
-	srand(time(0));
-	portNoServer = rand() % 65536;
-	if(portNoServer < 1024)
-		portNoServer += 1024;
+	// srand(time(0));
+	// portNoServer = rand() % 65536;
+	// if(portNoServer < 1024)
+	// 	portNoServer += 1024;
+
+	portNoServer = my_port;
 
 	socklen_t len = sizeof(current);
 
-	sock = socket(AF_INET,SOCK_DGRAM,0);
+	sock = socket(AF_INET,SOCK_STREAM,0);
 	current.sin_family = AF_INET;
-	current.sin_port = htons(portNoServer);
-	current.sin_addr.s_addr = inet_addr("10.1.38.136");
+	current.sin_port = htons(my_port);
+	current.sin_addr.s_addr = inet_addr(my_ip.c_str());
+	
 
 	if( bind(sock,(struct sockaddr *)&current,len) < 0){
 		perror("error");
@@ -40,7 +64,7 @@ void SocketAndPort::changePortNumber(int newPortNumber){
 		else{
 			close(sock);
 			socklen_t len = sizeof(current);
-			sock = socket(AF_INET,SOCK_DGRAM,0); 
+			sock = socket(AF_INET,SOCK_STREAM,0); 
 			current.sin_port = htons(newPortNumber);
 			if( bind(sock,(struct sockaddr *)&current,len) < 0){
 				perror("error");
@@ -56,13 +80,13 @@ void SocketAndPort::changePortNumber(int newPortNumber){
 
 /* check if a port number is already in use */
 bool SocketAndPort::isPortInUse(int portNo){
-	int newSock = socket(AF_INET,SOCK_DGRAM,0);
+	int newSock = socket(AF_INET,SOCK_STREAM,0);
 
 	struct sockaddr_in newCurr;
 	socklen_t len = sizeof(newCurr);
 	newCurr.sin_port = htons(portNo);
 	newCurr.sin_family = AF_INET;
-	newCurr.sin_addr.s_addr = inet_addr("10.1.38.136");
+	newCurr.sin_addr.s_addr = inet_addr(my_ip.c_str());
 	
 	if( bind(newSock,(struct sockaddr *)&newCurr,len) < 0){
 		perror("error");
