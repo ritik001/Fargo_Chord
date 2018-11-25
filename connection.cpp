@@ -2,8 +2,29 @@
 
 #include "chord.h"
 #include "connection.h"
+#include "util.h"
 
 
+int SocketAndPort::connect_socket(string ip,string port)
+{
+	Utility util;
+	struct sockaddr_in serverToConnectTo;
+	socklen_t l = sizeof(serverToConnectTo);
+	util.setServerDetails(serverToConnectTo,ip,stoi(port));
+	int sock = socket(AF_INET,SOCK_STREAM,0);
+	if(sock < 0){
+		perror("error");
+	}
+	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
+	if (ret < 0)
+	{
+	//	printf("Error In Connection Connection.cpp.\n");
+		return -1;
+	}
+	else
+	{}
+	return sock;
+}
 
 /* generate a port number to run on */
 void SocketAndPort::assignAndBindToIpAndPort(){
@@ -21,13 +42,11 @@ void SocketAndPort::assignAndBindToIpAndPort(){
 	current.sin_port = htons(portNoServer);
 	current.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	int ret;
-	ret = bind(sock,(struct sockaddr *)&current,len);
-	if (ret < 0)
-	{
-		printf("Error in binding1\n");
-		//exit(1);
+	if( bind(sock,(struct sockaddr *)&current,len) < 0){
+		perror("error");
+		exit(-1);
 	}
+
 }
 
 /* change Port Number */
@@ -66,7 +85,7 @@ bool SocketAndPort::isPortInUse(int portNo){
 	newCurr.sin_family = AF_INET;
 	newCurr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	
-/* 	if( bind(newSock,(struct sockaddr *)&newCurr,len) < 0){
+	if( bind(newSock,(struct sockaddr *)&newCurr,len) < 0){
 		perror("error");
 		return true;
 	}
@@ -74,34 +93,6 @@ bool SocketAndPort::isPortInUse(int portNo){
 		close(newSock);
 		return false;
 	}
- */
-	
-	int ret;
-	ret = bind(newSock,(struct sockaddr *)&newCurr,len);
-	if (ret < 0)
-	{
-		printf("Error in binding2\n");
-	 	close(newSock);
-		return true;
-	}
-
-	// if (listen(newSock, 10) == 0)
-	// 	printf("3. Listening1\n");
-	// else
-	// 	printf("Error in listening\n");
-
-	// while (1)
-	// {
-	// 	newSocket = accept(newSock, (struct sockaddr *)&new_addr, &addr_size);
-	// 	if (newSocket < 0)
-	// 	{
-	// 		printf("Connection not accepted \n");
-	// 		exit(1);
-	// 	}
-	// }
-
-	return false;
-
 }
 
 /* get IP Address */

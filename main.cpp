@@ -40,6 +40,7 @@ int main(){
 
 			/* */
 			processTwoLengthCommands(nodeDetails,arg,arguments);
+			cout <<" executed command\n";
 		}
 
 		else if(arguments.size() == 3){
@@ -63,8 +64,8 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 				}
 				else{
 					thread first(create,ref(nodeDetails));
-					cout<<"detaching on accepting\n";
 					first.detach();
+/* 					create(nodeDetails); */
 				}
 			}
 
@@ -137,8 +138,12 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 				if(nodeDetails.getStatus() == true){
 					cout<<"This node is already on the ring.\n";
 				}
-				else
-					join(nodeDetails,arguments[1],arguments[2]);
+				else{
+					join(ref(nodeDetails),arguments[1],arguments[2]);
+/* 					thread one(join,ref(nodeDetails),arguments[1],arguments[2]);
+					one.detach(); */
+				}
+
 			}
 
 			/* puts the entered key and it's value to the necessary node*/

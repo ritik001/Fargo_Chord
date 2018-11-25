@@ -93,7 +93,7 @@ vector< pair<lli , string> > NodeDetails::getAllKeysForSuccessor(){
 
 vector< pair<lli , string> > NodeDetails::getKeysForPredecessor(lli nodeId){
 	map<lli,string>::iterator it;
-    cout << "in dict \n";
+
 	vector< pair<lli , string> > res;
 	for(it = dictionary.begin(); it != dictionary.end() ; it++){
 		lli keyId = it->first;
@@ -155,47 +155,19 @@ pair< pair<string,int> , lli > NodeDetails::findSuccessor(lli nodeId){
 		}
 		else{
 
-			/* connect to node which will now find the successor */
-			struct sockaddr_in serverToConnectTo;
-			socklen_t len = sizeof(serverToConnectTo);
-
-			string ip;
-			int port;
 
 			/* if this node couldn't find closest preciding node for given node id then now ask it's successor to do so */
 			if(node.second == -1){
 				node = successor;
 			}
 
-			Utility util;
-
-			util.setServerDetails(serverToConnectTo,node.first.first,node.first.second);
-
 			/* set timer on this socket */
+			Utility util;
     		struct timeval timer;
     		util.setTimer(timer);
 
-
-			int sockT = socket(AF_INET,SOCK_STREAM,0);
-
+    		int sockT = sp.connect_socket(node.first.first,to_string(node.first.second));
 			setsockopt(sockT,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
-
-			if(sockT < 0){
-				cout<<"socket cre error";
-				perror("error");
-				exit(-1);
-			}
-
-			int ret = connect(sockT, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
-
-			if (ret < 0)
-			{
-				printf("Error in connectionNodeAlive.\n");
-				exit(1);
-			}
-			else
-				printf("Connected\n");
-
 			/* send the node's id to the other node */
 			char nodeIdChar[40];
 			strcpy(nodeIdChar,to_string(nodeId).c_str());

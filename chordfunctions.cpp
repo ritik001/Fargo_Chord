@@ -89,30 +89,7 @@ void join(NodeDetails &nodeDetails,string ip,string port){
         return;
     }
 
-    /* set server socket details */
-    struct sockaddr_in server;
-
-    socklen_t l = sizeof(server);
-
-    util.setServerDetails(server,ip,stoi(port));
-
-    int sock = socket(AF_INET,SOCK_STREAM,0);
-
-    if(sock < 0){
-        perror("error");
-        exit(-1);
-    }
-
-	int ret = connect(sock, (struct sockaddr *)&server, sizeof(server));
-	if (ret < 0)
-	{
-		printf("Error in connectionNodepredecessor.\n");
-		exit(1);
-	}
-    else
-        printf("Connected\n");
-
-
+    int sock = nodeDetails.sp.connect_socket(ip,port);
 
     string currIp = nodeDetails.sp.getIpAddress();
     string currPort = to_string(nodeDetails.sp.getPortNumber()); 
@@ -123,23 +100,21 @@ void join(NodeDetails &nodeDetails,string ip,string port){
     char charNodeId[41];
     strcpy(charNodeId,to_string(nodeId).c_str());
 
-
+    cout<<"sending to server to find my successor nodeid"<<charNodeId<<"\n";
+    cout<<"send to"<<ip<<" "<<port<<"\n";
     /* node sends it's id to main node to find it's successor */
     if (send(sock, charNodeId, strlen(charNodeId), 0) == -1){
-        cout<<"yaha 1\n";
-        perror("error");
-        exit(-1);
+        cout<<"In JOIN1\n";
     }
-
+    //cout<<"sent to server"<<"\n";
     /* node receives id and port of it's successor */
     char ipAndPort[40];
     int len;
     if ((len = recv(sock, ipAndPort, 1024, 0)) == -1){
-        cout<<"yaha 2\n";
-        perror("error");
-        exit(-1);
+        cout<<"In JOIN2\n";
     }
     ipAndPort[len] = '\0';
+    cout<<"reveived from server"<<ipAndPort<<"\n";
 
     close(sock);
 
@@ -157,13 +132,9 @@ void join(NodeDetails &nodeDetails,string ip,string port){
     nodeDetails.setPredecessor("",-1,-1);
     nodeDetails.setFingerTable(ipAndPortPair.first,ipAndPortPair.second,hash);
     nodeDetails.setStatus();
-
-    cout<<"123"<<"\n";
-
     /* get all keys from it's successor which belongs to it now */
     util.getKeysFromSuccessor(nodeDetails , ipAndPortPair.first , ipAndPortPair.second);
-   cout<<"456"<<"\n";
-
+    cout<<"Got Necessary Keys\n";
     /* launch threads,one thread will listen to request from other nodes,one will do stabilization */
     thread fourth(listenTo,ref(nodeDetails));
     fourth.detach();
@@ -225,37 +196,7 @@ void leave(NodeDetails &nodeDetails){
 
     keysAndValues += "storeKeys";
 
-    struct sockaddr_in serverToConnectTo;
-    socklen_t l = sizeof(serverToConnectTo);
-
-    util.setServerDetails(serverToConnectTo,succ.first.first,succ.first.second);
-
-    int sock = socket(AF_INET,SOCK_STREAM,0);
-
-    if(sock < 0){
-        perror("error");
-        exit(-1);
-    }
-
-/* 	struct sockaddr_in serverAddr;
-
-	memset(&serverAddr, '\0', sizeof(serverAddr));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(nodeDetails.sp.getPortNumber());
-	serverAddr.sin_addr.s_addr = inet_addr(nodeDetails.sp.getIpAddress().c_str()); */
-
-    cout << "hello \n";
-    cout << "Port " << serverToConnectTo.sin_port << "\n";
-    cout << "Address " << serverToConnectTo.sin_addr.s_addr << "\n";
-
-	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
-	if (ret < 0)
-	{
-		printf("Error in connectionLeave.\n");
-		exit(1);
-	}
-    else
-        printf("Connected\n");
+    int sock = nodeDetails.sp.connect_socket(succ.first.first,to_string(succ.first.second));
 
     char keysAndValuesChar[2000];
     strcpy(keysAndValuesChar,keysAndValues.c_str());
@@ -268,7 +209,6 @@ void leave(NodeDetails &nodeDetails){
 /* perform different tasks according to received msg */
 void doTask(NodeDetails &nodeDetails,int newSock,struct sockaddr_in client,string nodeIdString){
 
-    cout << "In do task " << nodeIdString << "\n";
     /* predecessor of this node has left the ring and has sent all it's keys to this node(it's successor) */
     if(nodeIdString.find("storeKeys") != -1){
         util.storeAllKeys(nodeDetails,nodeIdString);
@@ -291,9 +231,9 @@ void doTask(NodeDetails &nodeDetails,int newSock,struct sockaddr_in client,strin
 
     /* contacting node has just joined the ring and is asking for keys that belongs to it now */
     else if(nodeIdString.find("getKeys") != -1){
-        cout << "Req received\n";
+     
         util.sendNeccessaryKeys(nodeDetails,newSock,client,nodeIdString);
-
+        //cout<<"after sent\n";
     }
 
     /* contacting node has run get command so send value of key it requires */
@@ -320,57 +260,53 @@ void doTask(NodeDetails &nodeDetails,int newSock,struct sockaddr_in client,strin
     else{
         util.sendSuccessor(nodeDetails,nodeIdString,newSock,client);
     }
+    close(newSock);
+    //cout<<"closed after sending neccessary keys\n";
 
 }
 
 /* listen to any contacting node */
 void listenTo(NodeDetails &nodeDetails){
-    struct sockaddr_in client;
-    socklen_t l = sizeof(client);
-
-    /* wait for any client to connect and create a new thread as soon as one connects */
-
+/*     struct sockaddr_in client;
+    socklen_t l = sizeof(client); */
     int newSocket;
 	struct sockaddr_in new_addr;
 	socklen_t addr_size = sizeof(new_addr);
 
 	
     int sock = nodeDetails.sp.getSocketFd();
-/*     cout << "Request\n"; */
+    /* wait for any client to connect and create a new thread as soon as one connects */
+
+  /*   cout<<"listen thread launched by "<<nodeDetails.sp.getIpAddress()<<" "<<nodeDetails.sp.getPortNumber()<<"on socjet id"<<sock; */
+
+
     while(1){
 
         if (listen(sock, 10) == 0)
-		    printf("3. Listening\n");
+        {}
+/* 		    printf("Listening in listentoFN\n"); */
 	    else
-		    printf("Error in listening\n");
-
-		printf("Inside\n");
+/* 		    printf("Error in listening ListenFN\n"); */{}
 		newSocket = accept(sock, (struct sockaddr *)&new_addr, &addr_size);
 		
-        cout<<"after accept\n";
         if (newSocket < 0)
 		{
-			printf("Connection not accepted \n");
+/* 			printf("Connection not accepted \n"); */
 			exit(1);
 		}
 		else
-			printf("connection accepted \n");
-
-	//nodeDetails.sp.closeSocket();
+/* 			printf("connection accepted in ListenFN. \n"); */ {}   
 
         char charNodeId[40];
-        
         int len = recv(newSocket, charNodeId, 1024, 0);
         charNodeId[len] = '\0';
         string nodeIdString = charNodeId;
-        cout << "Val " << nodeIdString << "\n";
 
         /* launch a thread that will perform diff tasks acc to received msg */
-        thread f(doTask,ref(nodeDetails),newSocket,client,nodeIdString);
+        thread f(doTask,ref(nodeDetails),newSocket,new_addr,nodeIdString);
         f.detach();
-        close(newSocket);
     }
-        nodeDetails.sp.closeSocket();
+/*     nodeDetails.sp.closeSocket(); */
 }
 
 
@@ -378,18 +314,12 @@ void doStabilize(NodeDetails &nodeDetails){
 
     /* do stabilize tasks */
     while(1){
-
         nodeDetails.checkPredecessor();
-
         nodeDetails.checkSuccessor();
-
         nodeDetails.stabilize();
-
         nodeDetails.updateSuccessorList();
-
         nodeDetails.fixFingers();
-
-        this_thread::sleep_for(chrono::milliseconds(300));
+        this_thread::sleep_for(chrono::milliseconds(500));
     }
 }
 
@@ -416,12 +346,12 @@ void callNotify(NodeDetails &nodeDetails,string ipAndPort){
 
 /* tell about all commands */
 void showHelp(){
-    cout<<"1) create : will create a DHT ring\n\n";
-    cout<<"2) join <ip> <port> : will join ring by connecting to main node having ip and port\n\n";
-    cout<<"3) printstate : will print successor, predecessor, fingerTable and Successor list\n\n";
-    cout<<"4) print : will print all keys and values present in that node\n\n";
-    cout<<"5) port : will display port number on which node is listening\n\n";
-    cout<<"6) port <number> : will change port number to mentioned number if that port is free\n\n";
-    cout<<"7) put <key> <value> : will put key and value to the node it belongs to\n\n";
-    cout<<"8) get <key> : will get value of mentioned key\n\n";
+    cout<<"1) create : will create a DHT ring\n";
+    cout<<"2) join <ip> <port> : will join ring by connecting to main node having ip and port\n";
+    cout<<"3) printstate : will print successor, predecessor, fingerTable and Successor list\n";
+    cout<<"4) print : will print all keys and values present in that node\n";
+    cout<<"5) port : will display port number on which node is listening\n";
+    cout<<"6) port <number> : will change port number to mentioned number if that port is free\n";
+    cout<<"7) put <key> <value> : will put key and value to the node it belongs to\n";
+    cout<<"8) get <key> : will get value of mentioned key\n";
 }
