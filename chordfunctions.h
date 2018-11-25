@@ -1,3 +1,10 @@
+/**
+    * Team: Fargo
+    * Members: Amit , Ritik , Suchi , Neeraj
+    * Subject: Operating System
+    * Project: Chord
+**/
+
 #ifndef chordfunctions_h
 #define chordfunctions_h
 

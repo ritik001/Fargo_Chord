@@ -1,3 +1,5 @@
+// Not used this file finally.
+
 #ifndef NODE_H
 #define NODE_H
 
@@ -16,8 +18,7 @@ public:
 	string ip;
 	int port;
 
-	map<ll,string> keys; // responsible for these keys <key_identifier,address(ip:port)>
-
+//	map<ll,string> keys; // responsible for these keys <key_identifier,address(ip:port)>
 
 
 	Node(ll identifier, pair<ll,string> successor, pair<ll,string> predecessor);
