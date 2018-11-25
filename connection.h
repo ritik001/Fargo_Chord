@@ -1,3 +1,10 @@
+/**
+    * Team: Fargo
+    * Members: Amit , Ritik , Suchi , Neeraj
+    * Subject: Operating System
+    * Project: Chord
+**/
+
 #ifndef connection_h
 #define connection_h
 
@@ -6,11 +13,12 @@
 #include "chord.h"
 using namespace std;
 
-class SocketAndPort{
-	private:
-		int portNoServer;
-		int sock;
-		struct sockaddr_in current;
+class SocketAndPort
+{
+  private:
+	int portNoServer;
+	int sock;
+	struct sockaddr_in current;
 
 	public:
 		void assignAndBindToIpAndPort();

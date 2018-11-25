@@ -4,7 +4,9 @@
 #include "connection.h"
 #include "util.h"
 
-
+/* 
+    Common function to connect socket.
+*/
 int SocketAndPort::connect_socket(string ip,string port)
 {
 	Utility util;
@@ -18,15 +20,18 @@ int SocketAndPort::connect_socket(string ip,string port)
 	int ret = connect(sock, (struct sockaddr *)&serverToConnectTo, sizeof(serverToConnectTo));
 	if (ret < 0)
 	{
-	//	printf("Error In Connection Connection.cpp.\n");
+//		printf("Error In Connection Connection.cpp\n");
 		return -1;
 	}
 	else
 	{}
 	return sock;
 }
+ 
+/* 
+    Assign and bind to port.
+*/
 
-/* generate a port number to run on */
 void SocketAndPort::assignAndBindToIpAndPort(){
 
 	/* generating a port number between 1024 and 65535 */
@@ -52,7 +57,9 @@ void SocketAndPort::assignAndBindToIpAndPort(){
 
 }
 
-/* change Port Number */
+/* 
+    Change port number.
+*/
 void SocketAndPort::changePortNumber(int newPortNumber){
 	if(newPortNumber < 1024 || newPortNumber > 65535){
 		cout<<"Please enter a valid port number\n";
@@ -109,7 +116,6 @@ int SocketAndPort::getPortNumber(){
 	return portNoServer;
 }
 
-/* */
 int SocketAndPort::getSocketFd(){
 	return sock;
 }

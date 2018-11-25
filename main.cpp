@@ -8,9 +8,9 @@
 #include "chord.h"
 
 using namespace std;
-void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments);
-void processTwoLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments);
-void processThreeLengthCommands(NodeDetails &nodeDetails,string arg,vector<string> &arguments);
+void processOneLengthCommands(NodeDetails &nodeDetails, string arg, vector<string> &arguments);
+void processTwoLengthCommands(NodeDetails &nodeDetails, string arg, vector<string> &arguments);
+void processThreeLengthCommands(NodeDetails &nodeDetails, string arg, vector<string> &arguments);
 
 string my_ip;
 int my_port;
@@ -34,36 +34,38 @@ int main(int argc, char*argv[]){
 	
 	string command;
 
-	while(1){
-		cout<<"> ";
-		getline(cin,command);
+	while (1)
+	{
+		cout << "> ";
+		getline(cin, command);
 
-		/* find space in command and seperate arguments*/
 		Utility util = Utility();
 		vector<string> arguments = util.split_string(command);
 
 		string arg = arguments[0];
-		if(arguments.size() == 1){
-
-			/* creates */
-			processOneLengthCommands(nodeDetails,arg,arguments);
+		if (arguments.size() == 1)
+		{
+			/* Creates */
+			processOneLengthCommands(nodeDetails, arg, arguments);
 		}
 
-		else if(arguments.size() == 2){
+		else if (arguments.size() == 2)
+		{
 
 			/* */
 			processTwoLengthCommands(nodeDetails,arg,arguments);
 			cout <<" executed command\n";
 		}
 
-		else if(arguments.size() == 3){
+		else if (arguments.size() == 3)
+		{
 
-			/* */
-			processThreeLengthCommands(nodeDetails,arg,arguments);
+			processThreeLengthCommands(nodeDetails, arg, arguments);
 		}
 
-		else{
-			cout<<"Invalid Command\n";
+		else
+		{
+			cout << "#------------------- Invalid Command ---------------------#\n";
 		}
 	}
 
@@ -117,7 +119,7 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 			}
 
 			else{
-				cout<<"Invalid Command\n";
+			cout << "#------------------- Invalid Command ---------------------#\n";
 			}
 	}
 
@@ -169,7 +171,7 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 			}
 
 			else{
-				cout<<"Invalid Command\n";
+			cout << "#------------------- Invalid Command ---------------------#\n";
 			}
 	}
 
@@ -181,6 +183,7 @@ void processOneLengthCommands(NodeDetails &nodeDetails,string arg,vector<string>
 			}
 
 			else{
-				cout<<"Invalid Command\n";
+			cout << "#------------------- Invalid Command ---------------------#\n";
 			}
 	}
+

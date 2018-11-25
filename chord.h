@@ -1,3 +1,9 @@
+/**
+    * Team: Fargo
+    * Members: Ritik , Amit , Suchi , Neeraj
+    * Project: Chord
+**/
+
 #ifndef chord_h
 #define chord_h
 #include <iostream>
@@ -17,8 +23,8 @@
 #include <mutex>
 #include <sstream>
 
-#define M 10
-#define R 3
+#define M 48
+#define R 10
 
 using namespace std;
 

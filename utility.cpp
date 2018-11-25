@@ -5,29 +5,26 @@
 
 mutex mt;
 
-/* splits the command into seperate arguments */
+/*utility function to split command by spaces*/
 vector<string> Utility::split_string(string command){  // improve for multiple spaces
-      char delimiter=' ';
-      vector<string> processed_command;
+      char space_delimiter=' ';
+      vector<string> split_command;
       stringstream ss(command);
-      string token;
+      string tokens;
      
-      while(getline(ss, token, delimiter)) {
-        processed_command.push_back(token);
+      while(getline(ss, tokens, space_delimiter)) {
+        split_command.push_back(tokens);
       }
-      return processed_command;
+      return split_command;
 }
 
-/* get SHA1 hash for a given key */
+/* generating SHA1*/
 lli Utility::getHash(string key){
-    unsigned char obuf[41];
+    unsigned char outputbuf[41];
     char finalHash[41];
     string keyHash = "";
     int i;
     lli mod = pow(2,M);
-
-    
-    /* convert string to an unsigned char array because SHA1 takes unsigned char array as parameter */
     unsigned char unsigned_key[key.length()+1];
     for(i=0;i<key.length();i++){
         unsigned_key[i] = key[i];
@@ -35,17 +32,17 @@ lli Utility::getHash(string key){
     unsigned_key[i] = '\0';
 
 
-    SHA1(unsigned_key,sizeof(unsigned_key),obuf);
+    SHA1(unsigned_key,sizeof(unsigned_key),outputbuf);
     for (i = 0; i < SHA224_DIGEST_LENGTH/8; i++) {
-        sprintf(finalHash,"%d",obuf[i]);
+        sprintf(finalHash,"%d",outputbuf[i]);
         keyHash += finalHash;
     }
 
-    lli hash = stoll(keyHash) % mod;
-    return hash;
+    lli hashToReturn = stoll(keyHash) % mod;
+    return hashToReturn;
 }
 
-/* key will be in form of ip:port , will seperate ip and port and return it */
+/* split string on basis of :*/
 pair<string,int> Utility::getIpAndPort(string key){
 
     int pos = key.find(':');
@@ -59,7 +56,7 @@ pair<string,int> Utility::getIpAndPort(string key){
     return ipAndPortPair;
 }
 
-/* key will be in form of key:value , will seperate key and value and return it */
+/* split string for keyvalue pair when get and put function used*/
 pair<lli,string> Utility::getKeyAndVal(string keyAndVal){
 
     int pos = keyAndVal.find(':');
@@ -89,7 +86,7 @@ bool Utility::isKeyValue(string id){
     return true;
 }
 
-/* will contact a node and get value of a particular key from that node */
+/* Used in get function to obtain value for a key*/
 string Utility::getKeyFromNode(pair< pair<string,int> , lli > node,string keyHash){
     string ip = node.first.first;
     int port = node.first.second;
@@ -103,27 +100,26 @@ string Utility::getKeyFromNode(pair< pair<string,int> , lli > node,string keyHas
     strcpy(keyHashChar,keyHash.c_str());
 
     send(sock,keyHashChar,strlen(keyHashChar),0);
-
+// cout<<"sent key hash to server";
     char valChar[100];
     int len = recv(sock,valChar,1024,0);
 
     valChar[len] = '\0';
 
     string val = valChar;
-
+//  cout<<"checking value"<<val;
     close(sock);
 
     return val;
 }
 
-/* set details of server to which you want to connect to */
 void Utility::setServerDetails(struct sockaddr_in &server,string ip,int port){
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(ip.c_str());
     server.sin_port = htons(port);
 }
 
-/* send key to node who requested for it */
+/*Used in put funtion */
 void Utility::sendKeyToNode(pair< pair<string,int> , lli > node,lli keyHash,string value){
     string ip = node.first.first;
     int port = node.first.second;
@@ -137,19 +133,18 @@ void Utility::sendKeyToNode(pair< pair<string,int> , lli > node,lli keyHash,stri
     strcpy(keyAndValChar,keyAndVal.c_str());
 
     send(sock,keyAndValChar,strlen(keyAndValChar),0);
-
+// cout<<"sent her";
     close(sock);
 }
 
 
-/* a newly joined node uses this function to get all keys from it's successor which belongs to it now */
+/* used in join by new node*/
 void Utility::getKeysFromSuccessor(NodeDetails &nodeDetails,string ip,int port){
 
     SocketAndPort sp;
-    cout<<"requesting for keys from successor now";
+   // cout<<"requesting for keys from successor now";
     int sock = sp.connect_socket(ip,to_string(port));
 
-    /* node sends msg "getKeys:id" to it's successor to get all keys which belongs to this node now */
     string id = to_string(nodeDetails.getId());
 
 
@@ -180,7 +175,7 @@ void Utility::getKeysFromSuccessor(NodeDetails &nodeDetails,string ip,int port){
 
 }
 
-/* keys and values are in form of key1:val1;key2:val2;.. , will seperate it accordingly */
+/* used to store all keys from predecessor when it leaves*/
 vector< pair<lli,string> > Utility::seperateKeysAndValues(string keysAndValues){
     int size = keysAndValues.size();
     int i = 0;
@@ -207,7 +202,7 @@ vector< pair<lli,string> > Utility::seperateKeysAndValues(string keysAndValues){
     return res;
 }
 
-/* string is in form of ip:port;ip:port;... will seperate all these ip's and ports */
+
 vector< pair<string,int> > Utility::seperateSuccessorList(string succList){
     int size = succList.size();
     int i = 0;
@@ -234,7 +229,7 @@ vector< pair<string,int> > Utility::seperateSuccessorList(string succList){
     return res;
 }
 
-/* combine ip and port as ip:port and return string */
+/* combine ip and port with : */
 string Utility::combineIpAndPort(string ip,string port){
     string ipAndPort = "";
     int i=0;
@@ -252,7 +247,7 @@ string Utility::combineIpAndPort(string ip,string port){
     return ipAndPort;
 }
 
-/* node receives all keys from it's predecessor who is leaving the ring */
+
 void Utility::storeAllKeys(NodeDetails &nodeDetails,string keysAndValues){
     int pos = keysAndValues.find("storeKeys");
 
@@ -296,7 +291,7 @@ void Utility::sendNeccessaryKeys(NodeDetails &nodeDetails,int newSock,struct soc
     
 }
 
-/* */
+/* after get command called from client */
 void Utility::sendValToNode(NodeDetails nodeDetails,int newSock,struct sockaddr_in client,string nodeIdString){
     nodeIdString.pop_back();
     lli key = stoll(nodeIdString);
@@ -322,7 +317,7 @@ void Utility::sendSuccessorId(NodeDetails nodeDetails,int newSock,struct sockadd
     strcpy(succIdChar,succId.c_str());
 
     send(newSock,succIdChar,strlen(succIdChar),0);
-
+// cout<<"sent";
 }
 
 /* find successor of contacting node and send it's ip:port to it */
@@ -373,7 +368,7 @@ void Utility::sendPredecessor(NodeDetails nodeDetails,int newSock,struct sockadd
     }
 }
 
-/* get successor id of the node having ip address as ip and port num as port */
+
 lli Utility::getSuccessorId(string ip,int port){
     
     SocketAndPort sp;
@@ -384,22 +379,22 @@ lli Utility::getSuccessorId(string ip,int port){
     char msg[] = "finger";
 
     if (send(sock, msg, strlen(msg) , 0) == -1){
-        cout<<"in get successor id"<<endl;
-        perror("error");
+        cout<<"in getsuccesorid"<<endl;
+       // perror("error");
         //exit(-1);
     }
 
     char succIdChar[40];
 
-    int len = recv(sock,succIdChar,1024,0);
+    int length = recv(sock,succIdChar,1024,0);
 
     close(sock);
 
-    if(len < 0){
+    if(length < 0){
         return -1;
     }
 
-    succIdChar[len] = '\0';
+    succIdChar[length] = '\0';
 
     return atoll(succIdChar);
 
@@ -488,7 +483,6 @@ pair< pair<string,int> , lli > Utility::getPredecessorNode(string ip,int port,st
 vector< pair<string,int> > Utility::getSuccessorListFromNode(string ip,int port){
 
 
-    /* set timer for socket */
     struct timeval timer;
     setTimer(timer);
     
@@ -538,7 +532,6 @@ void Utility::sendSuccessorList(NodeDetails &nodeDetails,int sock,struct sockadd
 
 }
 
-/* combine successor list in form of ip1:port1;ip2:port2;.. */
 string Utility::splitSuccessorList(vector< pair< pair<string,int> , lli > > list){
     string res = "";
 
@@ -550,14 +543,14 @@ string Utility::splitSuccessorList(vector< pair< pair<string,int> , lli > > list
     return res;
 }
 
-/* send ack to contacting node that this node is still alive */
+
 void Utility::sendAcknowledgement(int newSock,struct sockaddr_in client){
     socklen_t l = sizeof(client);
 
     send(newSock,"1",1,0);
 }
 
-/* check if node having ip and port is still alive or not */
+/* check if node alive or not */
 bool Utility::isNodeAlive(string ip,int port){
 
 

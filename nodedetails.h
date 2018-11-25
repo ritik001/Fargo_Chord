@@ -1,3 +1,10 @@
+/**
+    * Team: Fargo
+    * Members: Amit , Ritik , Suchi , Neeraj
+    * Subject: Operating System
+    * Project: Chord
+**/
+
 #ifndef nodeDetails_h
 #define nodeDetails_h
 

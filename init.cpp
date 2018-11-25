@@ -13,15 +13,15 @@
 
 using namespace std;
 
-void initialize(NodeDetails &nodeDetails){
+void initialize(NodeDetails &nodeDetails)
+{
 
-	/* open a socket to listen to other nodes */
+	/*
+ 	Open a socket to listen to other nodes
+*/
 	nodeDetails.sp.assignAndBindToIpAndPort();
 
 	cout<<"Started at address: "<<nodeDetails.sp.getIpAddress()<<":"<<nodeDetails.sp.getPortNumber()<<endl;
 
-	cout<<"Type help to know more\n";
-
-	
-	
+	cout << "Type help to know more\n";
 }

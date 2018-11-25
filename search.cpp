@@ -1,7 +1,11 @@
+// Not used file finally .
+
 #include "chord.h"
 #include "node.h"
 #include "finger.h"
 #include "helper.h"
+
+typedef long long ll;
 
 pair<ll,pair<string,int>> find_successor(ll identifier){ //return pair of address and id of successor
 	//pair<pair<string,int>,ll> predecessor_details=find_predecessor(id);
